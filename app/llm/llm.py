@@ -21,6 +21,7 @@ from openai import (
 )
 from openai.types.chat import ChatCompletionMessage
 from app.logger import logger
+from .usage_ledger import recorded_completion
 
 if TYPE_CHECKING:
     from app.config.config import LLMConfig
@@ -107,7 +108,7 @@ class LLM:
                     request_params["extra_body"] = self._config.extra_body
                 request_params.update(kwargs)
                     
-                response = self._get_client().chat.completions.create(**request_params)
+                response = recorded_completion(self._get_client(), request_params, self._config)
                 if not response.choices:
                     raise EmptyResponseError(f"No response from the model: {response}")
                 

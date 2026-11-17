@@ -1,5 +1,7 @@
+import os
 from app.dataset import BaseDataset, load_dataset, save_dataset, DataItem
 from app.llm import LLM
+from app.llm.usage_ledger import run_for_item, submit_with_usage_context
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from .checkers import BaseChecker, ResultChecker, SyntaxChecker, SelectChecker, MaxMinChecker, OrderByLimitChecker, OrderByNullChecker, JoinChecker, TimeChecker
 from app.pipeline.validation import validate_pipeline_step
@@ -148,9 +150,12 @@ class SQLRevisionRunner:
         sql_candidates = data_item.sql_candidates
         
         # If sql_candidates is empty or None, skip revision and set result to None
-        if not sql_candidates:
-            logger.error(f"sql_candidates is empty or None for item {data_item.question_id}, setting sql_candidates_after_revision to None")
-            data_item.sql_candidates_after_revision = None
+        if data_item.fast_path_sql or not sql_candidates:
+            if data_item.fast_path_sql:
+                data_item.sql_candidates_after_revision = [data_item.fast_path_sql]
+            else:
+                logger.warning(f"No SQL candidates for item {data_item.question_id}")
+                data_item.sql_candidates_after_revision = [] if os.environ.get("DEEPEYE_COUNT_NO_CANDIDATE") == "1" else None
             data_item.sql_revision_time = time.time() - start_time
             data_item.sql_revision_llm_cost = total_token_usage
             data_item.total_time += data_item.sql_revision_time
@@ -172,7 +177,7 @@ class SQLRevisionRunner:
         # Parallelize the revision of UNIQUE candidates only
         unique_norms = list(unique_candidates_map.keys())
         future_to_norm = {
-            self._inner_thread_pool_executor.submit(self._revise_one_candidate, unique_candidates_map[norm], data_item): norm
+            submit_with_usage_context(self._inner_thread_pool_executor, self._revise_one_candidate, unique_candidates_map[norm], data_item): norm
             for norm in unique_norms
         }
         
@@ -201,7 +206,7 @@ class SQLRevisionRunner:
         # If any revision failed, set entire result to None
         if has_failure:
             logger.error(f"Some SQL revisions failed for item {data_item.question_id}, setting sql_candidates_after_revision to None")
-            data_item.sql_candidates_after_revision = None
+            data_item.sql_candidates_after_revision = [] if os.environ.get("DEEPEYE_COUNT_NO_CANDIDATE") == "1" else None
         else:
             # Map results back to the original candidates list (preserving order and duplicates)
             final_revised_candidates = []
@@ -225,7 +230,7 @@ class SQLRevisionRunner:
             if data_item.is_stage_complete("sql_revision"):
                 logger.info(f"Skipping data item {data_item.question_id} because it has already been revised")
                 continue
-            future = self._thread_pool_executor.submit(self._revise_sql, data_item)
+            future = self._thread_pool_executor.submit(run_for_item, self._revise_sql, data_item)
             future_to_item[future] = data_item
         for idx, future in tqdm(enumerate(as_completed(future_to_item), start=1), total=len(future_to_item), desc="Revising SQL"):
             future.result()

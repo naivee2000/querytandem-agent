@@ -261,6 +261,10 @@ class SQLGenerationConfig(BaseModel):
     dc_sampling_budget: int = Field(default=5, description="The sampling budget of the dc generation")
     skeleton_sampling_budget: int = Field(default=5, description="The sampling budget of the skeleton generation")
     icl_sampling_budget: int = Field(default=5, description="The sampling budget of the icl generation")
+    icl_llm: Optional[LLMConfig] = None
+    icl_prompt_mode: Literal["upstream", "compact"] = "upstream"
+    icl_example_count: Optional[int] = Field(default=None, ge=0)
+    icl_fast_path: Literal["off", "single_table", "one_join", "first"] = "off"
     icl_few_shot_examples_path: Optional[str] = Field(default=None, description="The path of the icl few shot examples")
 
 
@@ -581,6 +585,14 @@ class Config:
             "dc_sampling_budget": sql_generation_config.get("dc_sampling_budget", 5),
             "skeleton_sampling_budget": sql_generation_config.get("skeleton_sampling_budget", 5),
             "icl_sampling_budget": sql_generation_config.get("icl_sampling_budget", 5),
+            "icl_llm": _resolve_llm_config(
+                None, None, "[sql_generation].icl_llm_profile", required=False,
+                llm_profiles=llm_profiles_config,
+                section_profile=sql_generation_config["icl_llm_profile"],
+            ) if "icl_llm_profile" in sql_generation_config else None,
+            "icl_prompt_mode": sql_generation_config.get("icl_prompt_mode", "upstream"),
+            "icl_example_count": sql_generation_config.get("icl_example_count"),
+            "icl_fast_path": sql_generation_config.get("icl_fast_path", "off"),
             "icl_few_shot_examples_path": sql_generation_config.get("icl_few_shot_examples_path", None),
         }
         

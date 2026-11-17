@@ -1,0 +1,103 @@
+{
+  "baseline": {
+    "questions": 200,
+    "correct": 134,
+    "execution_accuracy": 0.67,
+    "generation_tokens": {
+      "prompt_tokens": 2598687,
+      "completion_tokens": 1027652,
+      "total_tokens": 3626339
+    },
+    "pipeline_tokens": {
+      "prompt_tokens": 9724320,
+      "completion_tokens": 1712191,
+      "total_tokens": 11436511
+    },
+    "median_recorded_seconds": 79.10267043113708,
+    "icl_tokens": {
+      "prompt_tokens": 708018,
+      "completion_tokens": 156017,
+      "total_tokens": 864035
+    }
+  },
+  "prompt-only": {
+    "questions": 200,
+    "correct": 135,
+    "execution_accuracy": 0.675,
+    "generation_tokens": {
+      "prompt_tokens": 2068513,
+      "completion_tokens": 885652,
+      "total_tokens": 2954165
+    },
+    "pipeline_tokens": {
+      "prompt_tokens": 9293609,
+      "completion_tokens": 1615059,
+      "total_tokens": 10908668
+    },
+    "median_recorded_seconds": 25.296275734901428,
+    "icl_tokens": {
+      "prompt_tokens": 177844,
+      "completion_tokens": 14017,
+      "total_tokens": 191861
+    },
+    "paired_accuracy_delta": 0.005,
+    "paired_accuracy_delta_ci95": [
+      -0.03,
+      0.045454545454545456
+    ]
+  },
+  "training-only": {
+    "questions": 200,
+    "correct": 137,
+    "execution_accuracy": 0.685,
+    "generation_tokens": {
+      "prompt_tokens": 2640060,
+      "completion_tokens": 1037880,
+      "total_tokens": 3677940
+    },
+    "pipeline_tokens": {
+      "prompt_tokens": 9779168,
+      "completion_tokens": 1728605,
+      "total_tokens": 11507773
+    },
+    "median_recorded_seconds": 78.90183138847351,
+    "icl_tokens": {
+      "prompt_tokens": 749391,
+      "completion_tokens": 166245,
+      "total_tokens": 915636
+    },
+    "paired_accuracy_delta": 0.015,
+    "paired_accuracy_delta_ci95": [
+      -0.00980392156862745,
+      0.04040404040404041
+    ]
+  },
+  "tuned-compact": {
+    "questions": 200,
+    "correct": 140,
+    "execution_accuracy": 0.7,
+    "generation_tokens": {
+      "prompt_tokens": 2125244,
+      "completion_tokens": 900712,
+      "total_tokens": 3025956
+    },
+    "pipeline_tokens": {
+      "prompt_tokens": 9519269,
+      "completion_tokens": 1702470,
+      "total_tokens": 11221739
+    },
+    "median_recorded_seconds": 29.947879314422607,
+    "icl_tokens": {
+      "prompt_tokens": 234575,
+      "completion_tokens": 29077,
+      "total_tokens": 263652
+    },
+    "paired_accuracy_delta": 0.03,
+    "paired_accuracy_delta_ci95": [
+      -0.0052684916424781915,
+      0.07142857142857142
+    ],
+    "pipeline_token_savings_fraction": 0.018779503644074665,
+    "meets_target": true
+  }
+}

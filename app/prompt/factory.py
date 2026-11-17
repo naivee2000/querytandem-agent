@@ -52,6 +52,22 @@ class PromptFactory:
         return ICL_SQL_GENERATION_PROMPT.format(FEW_SHOT_EXAMPLES=few_shot_examples_str, DATABASE_SCHEMA=database_schema, QUESTION=question, HINT=hint)
 
     @staticmethod
+    def format_compact_icl_prompt(examples, schema, question, evidence, db_type=None):
+        dialect = db_type or "SQLite"
+        parts = [
+            f"Write one read-only {dialect} query. Return only <result>SQL</result>.",
+            f"Schema:\n{schema}",
+        ]
+        if examples:
+            rendered = "\n".join(
+                _format_few_shot_example(index, example)
+                for index, example in enumerate(examples, start=1)
+            )
+            parts.append(f"Examples:\n{rendered}")
+        parts.append(f"Question: {question}\nHint: {evidence or ''}")
+        return "\n\n".join(parts)
+
+    @staticmethod
     def format_execution_checker_prompt(database_schema: str, question: str, hint: str, sql: str, execution_result: str, db_type: Optional[str] = None) -> str:
         if _is_spider2_db_type(db_type):
             return SPIDER2_EXECUTION_CHECKER_PROMPT.format(DATABASE_SCHEMA=database_schema, QUESTION=question, HINT=hint, QUERY=sql, RESULT=execution_result, DATABASE_ENGINE=db_type.upper())

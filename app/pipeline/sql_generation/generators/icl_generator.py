@@ -13,8 +13,11 @@ class ICLGenerator(BaseSQLGenerator):
     
     _few_shot_examples: Dict[str, List[Dict[str, str]]] = None
     
-    def __init__(self, few_shot_examples_path: Optional[str] = None, extractor_max_retry: Optional[int] = None) -> None:
+    def __init__(self, few_shot_examples_path: Optional[str] = None, extractor_max_retry: Optional[int] = None, *,
+                 prompt_mode: str = "upstream", example_count: Optional[int] = None) -> None:
         super().__init__(extractor_max_retry=extractor_max_retry)
+        self._prompt_mode = prompt_mode
+        self._example_count = example_count
         self._few_shot_examples = {}
         if few_shot_examples_path:
             if Path(few_shot_examples_path).exists():
@@ -33,18 +36,24 @@ class ICLGenerator(BaseSQLGenerator):
         if sampling_budget == 0:
             return [], {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
         
-        few_shot_examples, few_shot_source = get_few_shot_examples_for_item(data_item, self._few_shot_examples)
-            
-        if not few_shot_examples:
+        if self._example_count == 0:
+            few_shot_examples = []
+        else:
+            few_shot_examples, source = get_few_shot_examples_for_item(data_item, self._few_shot_examples)
+            few_shot_examples = (few_shot_examples or [])[:self._example_count]
+            logger.debug(f"Using {len(few_shot_examples)} examples from {source}")
+        if not few_shot_examples and self._example_count != 0 and self._prompt_mode == "upstream":
             logger.warning(f"Few-shot examples not found for {data_item.get_item_id()}, returning empty result.")
             return [], {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
-
-        logger.debug(f"Using {len(few_shot_examples)} few-shot examples from {few_shot_source} for ICL item {data_item.get_item_id()}")
 
         db_type = getattr(data_item, "db_type", None)
         
         # Define the prompt format function for ICL generator
         def prompt_format_func(schema_profile: str) -> str:
+            if self._prompt_mode == "compact":
+                return PromptFactory.format_compact_icl_prompt(
+                    few_shot_examples, schema_profile, data_item.question, data_item.evidence, db_type
+                )
             return PromptFactory.format_icl_sql_generation_prompt(
                 few_shot_examples, 
                 schema_profile, 

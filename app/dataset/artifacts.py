@@ -53,6 +53,8 @@ class SchemaLinkingArtifact(BaseModel):
 
 class SQLGenerationArtifact(BaseModel):
     sql_candidates: Optional[List[str]] = Field(default=None)
+    first_icl_sql: Optional[str] = None
+    fast_path_sql: Optional[str] = None
     sql_generation_time: Optional[float] = Field(default=None)
     sql_generation_llm_cost: Optional[Dict[str, Any]] = Field(default=None)
 
@@ -115,6 +117,8 @@ STAGE_ARTIFACT_FIELDS = {
     ),
     "sql_generation": (
         "sql_candidates",
+        "first_icl_sql",
+        "fast_path_sql",
         "sql_generation_time",
         "sql_generation_llm_cost",
     ),
@@ -142,7 +146,7 @@ STAGE_VALIDATION_FIELDS = {
         "schema_linking_time",
         "schema_linking_llm_cost",
     ),
-    "sql_generation": STAGE_ARTIFACT_FIELDS["sql_generation"],
+    "sql_generation": ("sql_candidates", "sql_generation_time", "sql_generation_llm_cost"),
     "sql_revision": STAGE_ARTIFACT_FIELDS["sql_revision"],
     "sql_selection": STAGE_ARTIFACT_FIELDS["sql_selection"],
 }

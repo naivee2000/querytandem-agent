@@ -48,6 +48,8 @@ class DataItem(BaseModel):
     
     # SQL Generation Step
     sql_candidates: Optional[List[str]] = Field(default=None, description="The sql candidates of the data item")
+    first_icl_sql: Optional[str] = None
+    fast_path_sql: Optional[str] = None
     
     # SQL Revision Step
     sql_candidates_after_revision: Optional[List[str]] = Field(default=None, description="The sql candidates after revision of the data item")

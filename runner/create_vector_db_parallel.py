@@ -12,6 +12,7 @@ from app.logger import configure_logger, logger
 from app.progress import log_progress
 
 _WORKER_STATE = threading.local()
+_EMBEDDING_INIT_LOCK = threading.Lock()
 
 
 def _embedding_config_key(vector_database_config) -> tuple:
@@ -39,16 +40,17 @@ def _get_worker_embedding_function(vector_database_config):
             f"Initializing embedding function for worker {threading.current_thread().name} "
             f"with model {vector_database_config.embedding_model_name_or_path}"
         )
-        embedding_cache[cache_key] = get_embedding_function(
-            model_name_or_path=vector_database_config.embedding_model_name_or_path,
-            api_type=vector_database_config.api_type,
-            use_qwen3_embedding=vector_database_config.use_qwen3_embedding,
-            local_files_only=vector_database_config.local_files_only,
-            normalize_embeddings=vector_database_config.normalize_embeddings,
-            base_url=vector_database_config.base_url,
-            api_key=vector_database_config.api_key,
-            embedding_device=vector_database_config.embedding_device,
-        )
+        with _EMBEDDING_INIT_LOCK:
+            embedding_cache[cache_key] = get_embedding_function(
+                model_name_or_path=vector_database_config.embedding_model_name_or_path,
+                api_type=vector_database_config.api_type,
+                use_qwen3_embedding=vector_database_config.use_qwen3_embedding,
+                local_files_only=vector_database_config.local_files_only,
+                normalize_embeddings=vector_database_config.normalize_embeddings,
+                base_url=vector_database_config.base_url,
+                api_key=vector_database_config.api_key,
+                embedding_device=vector_database_config.embedding_device,
+            )
     return embedding_cache[cache_key]
 
 
@@ -186,6 +188,8 @@ def run_vector_db_creation(
         "All vector database creation tasks completed: "
         f"success={succeeded_databases}, failed={failed_databases}"
     )
+    if failed_databases:
+        raise RuntimeError(f"Unable to build {failed_databases} vector databases.")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,18 @@
+train: true
+fine_tune_type: lora
+mask_prompt: true
+seed: 42
+batch_size: 1
+num_layers: 8
+grad_checkpoint: true
+learning_rate: 0.00001
+max_seq_length: 2048
+iters: 1000
+steps_per_eval: 250
+val_batches: 10
+save_every: 250
+lora_parameters:
+  keys: ["self_attn.q_proj", "self_attn.v_proj"]
+  rank: 8
+  scale: 20.0
+  dropout: 0.0

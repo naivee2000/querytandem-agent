@@ -1,5 +1,6 @@
 from app.dataset import BaseDataset, load_dataset, save_dataset, DataItem
 from app.llm import LLM
+from app.llm.usage_ledger import run_for_item, submit_with_usage_context
 from app.logger import logger
 from app.prompt import PromptFactory
 from app.llm_extractor import LLMExtractor
@@ -306,11 +307,10 @@ class SQLSelectionRunner:
         # Track token usage for this specific data item
         total_token_usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
                 
-        top_k_sql_candidates = self._get_top_k_sql_candidates(data_item)
+        top_k_sql_candidates = [] if data_item.fast_path_sql else self._get_top_k_sql_candidates(data_item)
         
-        if len(top_k_sql_candidates) == 0:
-            logger.warning("No valid SQL candidates, backing to top-1 SQL")
-            data_item.final_selected_sql = data_item.sql_candidates_after_revision[0] if data_item.sql_candidates_after_revision else "Error"
+        if not top_k_sql_candidates:
+            data_item.final_selected_sql = data_item.fast_path_sql or next(iter(data_item.sql_candidates_after_revision or []), "Error")
             data_item.sql_selection_time = time.time() - start_time
             data_item.sql_selection_llm_cost = total_token_usage
             data_item.total_time += data_item.sql_selection_time
@@ -365,7 +365,7 @@ class SQLSelectionRunner:
         # Parallelize the pairwise comparisons
         has_failure = False
         future_to_pair = {
-            self._inner_thread_pool_executor.submit(
+            submit_with_usage_context(self._inner_thread_pool_executor,
                 self._compare_sqls,
                 sql_a[0],
                 sql_a[1],
@@ -418,7 +418,7 @@ class SQLSelectionRunner:
             if data_item.is_stage_complete("sql_selection"):
                 logger.info(f"Skipping data item {data_item.question_id} because it has already been selected")
                 continue
-            future = self._thread_pool_executor.submit(self._select_best_sql, data_item)
+            future = self._thread_pool_executor.submit(run_for_item, self._select_best_sql, data_item)
             future_to_item[future] = data_item
         for idx, future in tqdm(enumerate(as_completed(future_to_item), start=1), total=len(future_to_item), desc="Selecting Best SQL"):
             future.result()

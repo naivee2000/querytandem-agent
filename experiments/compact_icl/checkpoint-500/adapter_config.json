@@ -1,0 +1,46 @@
+{
+    "adapter_path": "workspace/compact-icl/bird-adapter",
+    "batch_size": 1,
+    "clear_cache_threshold": 0,
+    "config": "experiments/compact_icl/lora.yaml",
+    "data": "workspace/compact-icl/bird",
+    "fine_tune_type": "lora",
+    "grad_accumulation_steps": 1,
+    "grad_checkpoint": true,
+    "iters": 1000,
+    "learning_rate": 1e-05,
+    "lora_parameters": {
+        "keys": [
+            "self_attn.q_proj",
+            "self_attn.v_proj"
+        ],
+        "rank": 8,
+        "scale": 20.0,
+        "dropout": 0.0
+    },
+    "lr_schedule": null,
+    "mask_prompt": true,
+    "max_seq_length": 2048,
+    "model": ".cache/huggingface/hub/models--mlx-community--Qwen3-4B-Instruct-2507-4bit/snapshots/50d427756c6b1b2fe0c0a10f67fbda1fc8e82c1b",
+    "num_layers": 8,
+    "optimizer": "adam",
+    "optimizer_config": {
+        "adam": {},
+        "adamw": {},
+        "muon": {},
+        "sgd": {},
+        "adafactor": {}
+    },
+    "project_name": null,
+    "report_to": null,
+    "resume_adapter_file": null,
+    "save_every": 250,
+    "seed": 42,
+    "steps_per_eval": 250,
+    "steps_per_report": 10,
+    "test": false,
+    "test_batches": 500,
+    "train": true,
+    "trust_remote_code": false,
+    "val_batches": 10
+}

@@ -42,3 +42,6 @@ local_docs/
 # Jupyter checkpoints
 .ipynb_checkpoints/
 **/.ipynb_checkpoints/
+
+# Local experiment dependencies and model cache
+.cache/
