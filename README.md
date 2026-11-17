@@ -1,4 +1,6 @@
-# DeepEye-SQL · Compact SQL generation on Apple Silicon
+# SQL Prompt Lab
+
+Compact text-to-SQL generation on Apple Silicon.
 
 A portfolio extension of [HKUSTDial/DeepEye-SQL](https://github.com/HKUSTDial/DeepEye-SQL).
 I adapted one generator to run a locally fine-tuned 4B model with zero prompt
