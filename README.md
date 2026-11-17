@@ -1,4 +1,4 @@
-# SQL Prompt Lab
+# QueryTandem Agent
 
 Compact text-to-SQL generation on Apple Silicon.
 
