@@ -2,7 +2,6 @@
 
 Compact text-to-SQL generation on Apple Silicon.
 
-A portfolio extension of [HKUSTDial/DeepEye-SQL](https://github.com/HKUSTDial/DeepEye-SQL).
 I adapted one generator to run a locally fine-tuned 4B model with zero prompt
 examples, then measured what that saved across the full text-to-SQL pipeline.
 
