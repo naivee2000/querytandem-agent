@@ -37,17 +37,18 @@ These results apply to this DeepEye configuration and evaluation sample.
 ## Adaptive routing follow-up
 
 The optional router tries one local SQL answer and uses the full pipeline
-when the answer fails a conservative screen. In the **20-question pilot**,
-the one-join rule matched the full pipeline at **17/20** while saving
-**7.8% of tokens**. That was below the 10% target. Always taking the first
-answer saved 26.4% but scored 13/20. Validation is in progress. Routing is
-off by default.
+when the answer fails a conservative screen. On 100 validation questions,
+the single-table rule matched the full pipeline at **77/100 correct** and
+saved **1.3% of tokens**. The one-join rule saved **6.9%** and scored
+**75/100**. Neither met the target of at least 10% savings with no observed
+accuracy drop, so the fresh evaluation was skipped and routing stays off by default.
 
 ## Run or review
 
 - [Experiment setup and reproduction](experiments/compact_icl/README.md)
 - [Four-variant results](experiments/compact_icl/results/compact-icl.json)
-  and [routing pilot](experiments/compact_icl/results/routing-pilot.md)
+- [Routing validation](experiments/compact_icl/results/routing-validation.md)
+  and [initial pilot](experiments/compact_icl/results/routing-pilot.md)
 - [Trained MLX adapter and model card](experiments/compact_icl/checkpoint-500/README.md)
 - [Original DeepEye-SQL documentation and citation](UPSTREAM.md)
 
