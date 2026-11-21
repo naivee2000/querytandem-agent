@@ -276,6 +276,7 @@ class SQLRevisionConfig(BaseModel):
 
 
 class SQLSelectionConfig(BaseModel):
+    reranker_path: Optional[str] = None
     llm: LLMConfig = Field(..., description="The llm config, used to select sql")
     save_path: str = Field(default=_path_to_str(WORKSPACE_ROOT / "sql_selection"), description="The save path of the sql selection result")
     filter_top_k_sql: int = Field(default=2, description="The number of top k sql to filter")
@@ -622,6 +623,7 @@ class Config:
         # sql selection config
         sql_selection_config = config.get("sql_selection", {})
         sql_selection_settings = {
+            "reranker_path": sql_selection_config.get("reranker_path"),
             "llm": _resolve_llm_config(
                 default_llm_config,
                 sql_selection_config.get("llm"),

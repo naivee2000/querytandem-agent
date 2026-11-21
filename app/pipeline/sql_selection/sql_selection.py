@@ -4,6 +4,7 @@ from app.llm.usage_ledger import run_for_item, submit_with_usage_context
 from app.logger import logger
 from app.prompt import PromptFactory
 from app.llm_extractor import LLMExtractor
+from .reranker import SQLReranker, group_answers
 from app.pipeline.validation import validate_pipeline_step
 from app.progress import log_progress, should_checkpoint
 from typing import Dict, List, Any, Optional, Tuple
@@ -46,6 +47,12 @@ class SQLSelectionRunner:
         checkpoint_interval: int,
     ):
         self._stage_config = stage_config
+        self._reranker = None
+        if self._stage_config.reranker_path:
+            try:
+                self._reranker = SQLReranker.load(self._stage_config.reranker_path)
+            except (OSError, ValueError, TypeError, KeyError) as error:
+                logger.warning(f"Could not load SQL reranker, using standard selection: {error}")
         self._dataset_config = dataset_config
         self._input_save_path = input_save_path
         self._extractor_max_retry = extractor_max_retry
@@ -412,13 +419,27 @@ class SQLSelectionRunner:
             "total_tokens": data_item.total_llm_cost["total_tokens"] + data_item.sql_selection_llm_cost["total_tokens"],
         }
     
+    def _select_with_optional_reranker(self, data_item: DataItem):
+        self._select_best_sql(data_item)
+        if self._reranker is None or data_item.fast_path_sql:
+            return
+        if not data_item.database_path or (getattr(data_item, "db_type", None) or "sqlite").lower() != "sqlite":
+            return
+        started = time.monotonic()
+        data_item.final_selected_sql = self._reranker.choose(
+            group_answers(data_item), data_item.final_selected_sql
+        )
+        elapsed = time.monotonic() - started
+        data_item.sql_selection_time += elapsed
+        data_item.total_time += elapsed
+
     def run(self):
         future_to_item = {}
         for data_item in self._dataset:
             if data_item.is_stage_complete("sql_selection"):
                 logger.info(f"Skipping data item {data_item.question_id} because it has already been selected")
                 continue
-            future = self._thread_pool_executor.submit(run_for_item, self._select_best_sql, data_item)
+            future = self._thread_pool_executor.submit(run_for_item, self._select_with_optional_reranker, data_item)
             future_to_item[future] = data_item
         for idx, future in tqdm(enumerate(as_completed(future_to_item), start=1), total=len(future_to_item), desc="Selecting Best SQL"):
             future.result()

@@ -151,6 +151,7 @@ def _process_one_column(
     result = execute_sql_without_cache(db_path, query_sql, timeout=600)
     if result.result_type in ["success", "empty_result"]:
         value_examples = [str(row[0]) for row in result.result_rows]
+        del result
         
         if len(value_examples) == 0:
             return None
@@ -158,38 +159,36 @@ def _process_one_column(
         if _is_uuid_column(value_examples) or _is_number_column(value_examples):
             return None
 
-        stored_documents = []
-        stored_embeddings = []
         stored_table_name = table_name.lower() if lower_meta_data else table_name
         stored_column_name = column_name.lower() if lower_meta_data else column_name
         
-        # Process in batches to stay under embedding endpoint/model and ChromaDB limits.
-        for i in range(0, len(value_examples), embedding_batch_size):
-            batch_examples = value_examples[i:i + embedding_batch_size]
-            batch_embeddings = embedding_function(batch_examples)
-            if collection is not None:
-                collection.add(
-                    ids=[str(uuid.uuid4()) for _ in range(len(batch_examples))],
-                    documents=batch_examples,
-                    embeddings=batch_embeddings,
-                    metadatas=[
-                        {"db_id": db_id.lower(), "table_name": table_name.lower(), "column_name": column_name.lower()} 
-                        if lower_meta_data else {"db_id": db_id, "table_name": table_name, "column_name": column_name}
-                        for _ in range(len(batch_examples))
-                    ],
-                )
-            if local_index_path is not None:
-                stored_documents.extend(batch_examples)
-                stored_embeddings.extend(batch_embeddings)
+        def embedding_batches():
+            for offset in range(0, len(value_examples), embedding_batch_size):
+                batch_examples = value_examples[offset:offset + embedding_batch_size]
+                batch_embeddings = embedding_function(batch_examples)
+                if collection is not None:
+                    collection.add(
+                        ids=[str(uuid.uuid4()) for _ in batch_examples],
+                        documents=batch_examples,
+                        embeddings=batch_embeddings,
+                        metadatas=[
+                            {"db_id": db_id.lower() if lower_meta_data else db_id,
+                             "table_name": stored_table_name, "column_name": stored_column_name}
+                            for _ in batch_examples
+                        ],
+                    )
+                yield batch_embeddings
 
         if local_index_path is not None:
             return write_local_index_column(
                 local_index_path=local_index_path,
                 table_name=stored_table_name,
                 column_name=stored_column_name,
-                documents=stored_documents,
-                embeddings=stored_embeddings,
+                documents=value_examples,
+                embedding_batches=embedding_batches(),
             )
+        for _ in embedding_batches():
+            pass
         return None
     else:
         raise RuntimeError(f"Error executing SQL for {db_id}.{table_name}.{column_name}: {result.error_message}")

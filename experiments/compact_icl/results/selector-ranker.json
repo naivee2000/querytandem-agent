@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "features": [
+    "agreement",
+    "log_rows",
+    "log_columns",
+    "empty",
+    "log_sql_length",
+    "question_overlap",
+    "evidence_overlap",
+    "count_cue",
+    "group_cue",
+    "ordering_cue",
+    "distinct_cue",
+    "average_cue",
+    "negation_cue"
+  ],
+  "weights": [
+    2.188157991425756,
+    -0.28186407028762067,
+    -0.6621180132739665,
+    -1.2390763559340583,
+    -0.18635693318875327,
+    0.08597352864111187,
+    0.29735321158404265,
+    -0.04682309680598193,
+    0.0,
+    -0.10717048071216559,
+    0.0,
+    0.2237926813264087,
+    0.0
+  ],
+  "threshold": 0.9,
+  "qualified": false,
+  "runtime_sha256": "3c3ebef91e814610a7dcd59d3d6843a47e6e182d0040f4e01c6f885861e74566",
+  "training_sha256": "d97d0984ae8725d5029b01acff32b12137a85863a56853e5c57e1d41762e256b",
+  "refinement_plan_sha256": "7922c2fc3dda31dbb970d7b4cf5a60baf221606a05f68ba5a838eb876e9ebe39"
+}

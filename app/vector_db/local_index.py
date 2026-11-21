@@ -5,7 +5,7 @@ from hashlib import sha1
 import json
 from pathlib import Path
 from threading import Lock
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Iterable, List, Tuple
 
 import numpy as np
 import torch
@@ -39,7 +39,7 @@ def write_local_index_column(
     table_name: str,
     column_name: str,
     documents: List[str],
-    embeddings: List[List[float]],
+    embedding_batches: Iterable[List[List[float]]],
 ) -> Dict[str, Any] | None:
     if not documents:
         return None
@@ -53,9 +53,26 @@ def write_local_index_column(
     embeddings_filename = f"{file_stem}.embeddings.npy"
     documents_filename = f"{file_stem}.documents.json"
 
-    normalized_embeddings = _normalize_embeddings(np.asarray(embeddings, dtype=np.float32))
-
-    np.save(columns_dir / embeddings_filename, normalized_embeddings)
+    embedding_dim = 0
+    written = 0
+    with (columns_dir / embeddings_filename).open("wb") as file_obj:
+        for batch in embedding_batches:
+            normalized = _normalize_embeddings(np.asarray(batch, dtype=np.float32))
+            if normalized.ndim != 2 or not normalized.shape[0]:
+                raise ValueError("Expected a nonempty two-dimensional embedding batch.")
+            if written == 0:
+                embedding_dim = normalized.shape[1]
+                np.lib.format.write_array_header_1_0(file_obj, {
+                    "descr": normalized.dtype.str,
+                    "fortran_order": False,
+                    "shape": (len(documents), embedding_dim),
+                })
+            if normalized.shape[1] != embedding_dim:
+                raise ValueError("Embedding dimensions changed during index build.")
+            normalized.tofile(file_obj)
+            written += normalized.shape[0]
+    if written != len(documents):
+        raise ValueError("Embedding count differs from document count.")
     with (columns_dir / documents_filename).open("w", encoding="utf-8") as file_obj:
         json.dump(documents, file_obj, ensure_ascii=True)
 
@@ -66,7 +83,7 @@ def write_local_index_column(
         "embeddings_file": str(Path(LOCAL_INDEX_COLUMNS_DIRNAME) / embeddings_filename),
         "documents_file": str(Path(LOCAL_INDEX_COLUMNS_DIRNAME) / documents_filename),
         "count": len(documents),
-        "embedding_dim": int(normalized_embeddings.shape[1]) if normalized_embeddings.ndim == 2 else 0,
+        "embedding_dim": embedding_dim,
     }
 
 
@@ -144,7 +161,8 @@ class LocalValueIndex:
             if entry is None:
                 raise KeyError(f"Local index column not found: {table_name}.{column_name}")
 
-            embeddings = np.load(self._index_path / entry["embeddings_file"])
+            mmap_mode = "c" if self._device.type == "cpu" else None
+            embeddings = np.load(self._index_path / entry["embeddings_file"], mmap_mode=mmap_mode)
             with (self._index_path / entry["documents_file"]).open("r", encoding="utf-8") as file_obj:
                 documents = json.load(file_obj)
 

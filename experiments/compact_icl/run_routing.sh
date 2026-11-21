@@ -26,23 +26,44 @@ if [[ "$phase" == "all" ]]; then
   exit 0
 fi
 
-"$python" -m experiments.compact_icl.routing prepare "$phase"
-run="$PWD/workspace/runs/adaptive-icl-$phase"
-export CONFIG_PATH="$PWD/config/local/compact-icl/adaptive-$phase.toml"
+experiment=adaptive-icl
+if [[ "$phase" == pipeline ]]; then
+  experiment="${3:?Specify the experiment directory name}"
+  phase="${4:?Specify the dataset phase}"
+  out="$PWD/workspace/$experiment"
+  export DEEPEYE_API_CAP_USD="$credit"
+else
+  "$python" -m experiments.compact_icl.routing prepare "$phase"
+fi
+run="$PWD/workspace/runs/$experiment-$phase"
+if [[ "$experiment" == adaptive-icl ]]; then
+  export CONFIG_PATH="$PWD/config/local/compact-icl/adaptive-$phase.toml"
+else
+  export CONFIG_PATH="$PWD/config/local/compact-icl/$experiment-$phase.toml"
+fi
 export DEEPEYE_USAGE_LEDGER="$out/$phase-usage.jsonl" DEEPEYE_COUNT_NO_CANDIDATE=1
-if [[ -s "$run/sql_selection.snapshot" ]]; then
-  "$python" -m experiments.compact_icl.routing report "$phase"
+stage_complete() {
+  "$python" -c 'import sys; from experiments.compact_icl.rerank_experiment import snapshot_complete; sys.exit(0 if snapshot_complete(sys.argv[1], sys.argv[2]) else 1)' "$run/$1.snapshot" "$1"
+}
+if stage_complete sql_selection; then
+  if [[ "$experiment" == adaptive-icl ]]; then
+    "$python" -m experiments.compact_icl.routing report "$phase"
+  fi
   exit 0
 fi
 export DEEPEYE_API_CAP_USD
-DEEPEYE_API_CAP_USD=$("$python" -m experiments.compact_icl.routing budget "$phase" --verified-credit "$credit")
+if [[ "$experiment" == adaptive-icl ]]; then
+  DEEPEYE_API_CAP_USD=$("$python" -m experiments.compact_icl.routing budget "$phase" --verified-credit "$credit")
+fi
 test ! -e "$DEEPEYE_USAGE_LEDGER.cap-reached"
 printf 'Phase %s has a cumulative request cap of $%s.\n' "$phase" "$DEEPEYE_API_CAP_USD"
 curl --silent --show-error --max-time 15 --output /dev/null https://api.together.xyz/v1/models
 
 run_stage() {
   export DEEPEYE_STAGE="$1"
-  "$python" "runner/$1.py"
+  stage="$1"
+  shift
+  "$python" "runner/$stage.py" "$@"
   test ! -e "$DEEPEYE_USAGE_LEDGER.cap-reached"
 }
 
@@ -50,20 +71,24 @@ if [[ ! -s "$run/dataset.snapshot" ]]; then
   run_stage preprocess_dataset
 fi
 if [[ ! -f "$out/$phase.vector-ready" ]]; then
-  run_stage create_vector_db_parallel
+  if [[ "$experiment" == sql-reranker ]]; then
+    run_stage create_vector_db_parallel --parallelism 1
+  else
+    run_stage create_vector_db_parallel
+  fi
   touch "$out/$phase.vector-ready"
 fi
-if [[ ! -s "$run/value_retrieval.snapshot" ]]; then
+if ! stage_complete value_retrieval; then
   run_stage run_value_retrieval
 fi
-if [[ ! -s "$run/schema_linking.snapshot" ]]; then
+if ! stage_complete schema_linking; then
   export DEEPEYE_STAGE=run_few_shot_preparation
   "$python" runner/run_few_shot_preparation.py --index_path "$PWD/workspace/runs/_shared/bird/train_full_index"
   test ! -e "$DEEPEYE_USAGE_LEDGER.cap-reached"
   run_stage run_schema_linking
 fi
 
-if [[ ! -s "$run/sql_generation.snapshot" ]]; then
+if ! stage_complete sql_generation; then
   model=$(find .cache/huggingface/hub -type d -path '*/models--mlx-community--Qwen3-4B-Instruct-2507-4bit/snapshots/*' -print -quit)
   adapter=$("$python" -c 'import json; print(json.load(open("workspace/compact-icl/selection.json"))["selected"]["adapter"])')
   test -d "$model"
@@ -86,8 +111,10 @@ if [[ ! -s "$run/sql_generation.snapshot" ]]; then
   run_stage run_sql_generation
 fi
 for stage in run_sql_revision run_sql_selection; do
-  if [[ ! -s "$run/${stage#run_}.snapshot" ]]; then
+  if ! stage_complete "${stage#run_}"; then
     run_stage "$stage"
   fi
 done
-"$python" -m experiments.compact_icl.routing report "$phase"
+if [[ "$experiment" == adaptive-icl ]]; then
+  "$python" -m experiments.compact_icl.routing report "$phase"
+fi

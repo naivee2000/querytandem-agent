@@ -43,12 +43,28 @@ saved **1.3% of tokens**. The one-join rule saved **6.9%** and scored
 **75/100**. Neither met the target of at least 10% savings with no observed
 accuracy drop, so the fresh evaluation was skipped and routing stays off by default.
 
+## Trained selector follow-up
+
+I also trained a small CPU ranker to choose among existing SQL candidates.
+Collecting 200 training questions and adding local candidates produced 62
+questions with both correct and incorrect answers. On the same 100-question
+validation split, the ranker scored **77/100**, matching the existing selector
+and majority vote. It added no model calls or tokens, but did not meet the
+predefined 79/100 requirement. The existing selector remains the default,
+and the planned fresh benchmark was skipped.
+
+The experiment used **$2.37 in reported API usage**, plus a $0.045 allowance
+for one request with unknown usage. The code, derived training features,
+and fitted weights are included so the negative result can be inspected.
+
 ## Run or review
 
 - [Experiment setup and reproduction](experiments/compact_icl/README.md)
 - [Four-variant results](experiments/compact_icl/results/compact-icl.json)
 - [Routing validation](experiments/compact_icl/results/routing-validation.md)
   and [initial pilot](experiments/compact_icl/results/routing-pilot.md)
+- [Trained selector results](experiments/compact_icl/results/selector-validation.md)
+  and [machine-readable report](experiments/compact_icl/results/selector-validation.json)
 - [Trained MLX adapter and model card](experiments/compact_icl/checkpoint-500/README.md)
 - [Original DeepEye-SQL documentation and citation](UPSTREAM.md)
 

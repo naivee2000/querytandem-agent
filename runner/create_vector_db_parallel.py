@@ -193,7 +193,9 @@ def run_vector_db_creation(
 
 
 if __name__ == "__main__":
-    ArgumentParser().parse_args()
+    parser = ArgumentParser()
+    parser.add_argument("--parallelism", type=int)
+    args = parser.parse_args()
     from app.config import get_config
 
     app_config = get_config()
@@ -203,7 +205,7 @@ if __name__ == "__main__":
         dataset_snapshot_path=app_config.dataset_config.save_path,
         dataset_type=app_config.dataset_config.type,
         vector_database_config=app_config.vector_database_config,
-        parallelism=app_config.run_config.parallelism,
+        parallelism=app_config.run_config.parallelism if args.parallelism is None else args.parallelism,
         embedding_batch_size=app_config.run_config.embedding_batch_size,
         progress_log_interval=app_config.run_config.progress_log_interval,
     )
