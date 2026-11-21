@@ -1,0 +1,687 @@
+{
+  "schema_version": 1,
+  "mode": "recorded_examples",
+  "title": "QueryTandem Agent",
+  "source": {
+    "repository": "https://github.com/naivee2000/querytandem-agent",
+    "reference_commit": "ef2e6dbb8610835a4396167215cf21eba2928104",
+    "reference_commit_meaning": "Published experiment reference, not the demo-package commit.",
+    "artifact_sha256": {
+      "experiments/compact_icl/results/compact-icl.json": "40f99b13490db152ac327559c01ab5d06be44f681481727203b2616dab921c12",
+      "experiments/compact_icl/results/selector-validation.json": "b60c17aa430be4a4a3c0078c3dfb2163d3bfa712ad41e0780701c3b13d99de9e",
+      "workspace/runs/compact-icl-baseline/sql_selection.snapshot": "449172b7791c5a81c059b3725f51e2b712ad01ffd99f31a524405d053d5dd612",
+      "workspace/runs/compact-icl-baseline/sql_selection.snapshot.data/items.jsonl": "200e5289ef97d04496bd7c7b0c52954f8eb393ba97a8d7cd55ae4facd9ce616a",
+      "workspace/runs/compact-icl-tuned-compact/sql_selection.snapshot": "449172b7791c5a81c059b3725f51e2b712ad01ffd99f31a524405d053d5dd612",
+      "workspace/runs/compact-icl-tuned-compact/sql_selection.snapshot.data/items.jsonl": "3f3ee06ea969aaa0eefc53b778cf22c92f65d4daa7f6e140aae7171d71c12672",
+      "data/bird/dev/dev_databases/card_games/card_games.sqlite": "c98bdb57fe7474da798b407785544b9af0daaad5d61fd21e2a73309493bc1227",
+      "workspace/compact-icl/benchmark-icl/baseline/358.json": "dcdc4b95d15e012efa8240d24b074711b40266254a300fabd73c973a1e7e819c",
+      "workspace/compact-icl/benchmark-icl/tuned-compact/358.json": "1a03cc22d4e9b1fc7ece4aa400cad711013c2c5e780b9522fae3dcbf8ef8497f",
+      "workspace/compact-icl/benchmark-icl/baseline/507.json": "6801624192a09405ab5e5287fa0f444515790556e4725e4499502be00ad209cb",
+      "workspace/compact-icl/benchmark-icl/tuned-compact/507.json": "17906503171a7f10f8f89a200cd66869cc6ccb3e14e14dd13641089c77323ad5",
+      "workspace/compact-icl/benchmark-icl/baseline/341.json": "d2dc280cacbf92e17dc7832275c746b2de927c80a79f40c0beb510f7a7338ed9",
+      "workspace/compact-icl/benchmark-icl/tuned-compact/341.json": "5e5936afc27101bc3ca17f7e10dbfff37319aedcb342ef9c7b5533e8c752d7f9"
+    },
+    "exporter_sha256": "ad4bdae48a7d80ec070033519c1dac79d95b76406430bd5c16e99bd06eb9ae9e",
+    "result_provenance": "Saved final SQL predictions, locally reexecuted against the benchmark database; no new model calls."
+  },
+  "benchmark": {
+    "dataset": "BIRD dev",
+    "questions": 200,
+    "variants": {
+      "baseline": {
+        "questions": 200,
+        "correct": 134,
+        "execution_accuracy": 0.67,
+        "pipeline_tokens": {
+          "prompt_tokens": 9724320,
+          "completion_tokens": 1712191,
+          "total_tokens": 11436511
+        },
+        "icl_tokens": {
+          "prompt_tokens": 708018,
+          "completion_tokens": 156017,
+          "total_tokens": 864035
+        }
+      },
+      "prompt-only": {
+        "questions": 200,
+        "correct": 135,
+        "execution_accuracy": 0.675,
+        "pipeline_tokens": {
+          "prompt_tokens": 9293609,
+          "completion_tokens": 1615059,
+          "total_tokens": 10908668
+        },
+        "icl_tokens": {
+          "prompt_tokens": 177844,
+          "completion_tokens": 14017,
+          "total_tokens": 191861
+        }
+      },
+      "training-only": {
+        "questions": 200,
+        "correct": 137,
+        "execution_accuracy": 0.685,
+        "pipeline_tokens": {
+          "prompt_tokens": 9779168,
+          "completion_tokens": 1728605,
+          "total_tokens": 11507773
+        },
+        "icl_tokens": {
+          "prompt_tokens": 749391,
+          "completion_tokens": 166245,
+          "total_tokens": 915636
+        }
+      },
+      "tuned-compact": {
+        "questions": 200,
+        "correct": 140,
+        "execution_accuracy": 0.7,
+        "pipeline_tokens": {
+          "prompt_tokens": 9519269,
+          "completion_tokens": 1702470,
+          "total_tokens": 11221739
+        },
+        "icl_tokens": {
+          "prompt_tokens": 234575,
+          "completion_tokens": 29077,
+          "total_tokens": 263652
+        }
+      }
+    },
+    "local_generator_token_savings_fraction": 0.6948595832344755,
+    "pipeline_token_savings_fraction": 0.018779503644074665,
+    "accuracy_delta": 0.03,
+    "accuracy_delta_ci95": [
+      -0.0052684916424781915,
+      0.07142857142857142
+    ],
+    "confidence_interval_method": "95% paired database bootstrap; interval includes zero."
+  },
+  "selector_followup": {
+    "questions": 100,
+    "split": "Separate validation set, not the 200-question benchmark",
+    "current_correct": 77,
+    "trained_correct": 77,
+    "adopted": false,
+    "fresh_benchmark_run": false
+  },
+  "variant_labels": {
+    "baseline": "Original model · 7 prompt examples",
+    "tuned-compact": "Fine-tuned model · 0 prompt examples"
+  },
+  "metric_notes": {
+    "sql": "Final answer selected by the full DeepEye pipeline; not necessarily written by the local generator.",
+    "local_generator": "Per-example ICL metrics from saved successful stage records; input plus output tokens.",
+    "pipeline": "Per-example pipeline snapshot totals, including the shared preprocessing/generator attribution.",
+    "reconciliation": "Aggregate benchmark counts were reconciled with the request ledger, including retries; per-example records are not a complete allocation of all retry spending.",
+    "correctness": "Complete unordered sets of result rows match gold SQL; row order, duplicate multiplicity and column aliases are ignored, following this experiment's scorer.",
+    "previews": "At most 10 rows, sorted for stable display; correctness is checked before preview truncation.",
+    "selection": "Three deliberately selected illustrations from one database; do not calculate benchmark accuracy from them.",
+    "latency": "No per-example runtime, API cost, or live-response-speed claim is supplied."
+  },
+  "attribution": {
+    "project": "QueryTandem Agent",
+    "upstream": "HKUSTDial/DeepEye-SQL",
+    "upstream_url": "https://github.com/HKUSTDial/DeepEye-SQL",
+    "code_license": "MIT",
+    "model": "Qwen3-4B-Instruct-2507; Apache-2.0",
+    "model_url": "https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507",
+    "dataset": "BIRD benchmark (BIRD team)",
+    "dataset_url": "https://bird-bench.github.io/",
+    "example_data_license": "CC BY-SA 4.0",
+    "example_data_license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "changes": "Selected three BIRD dev examples, reduced schema metadata, added model predictions and evaluation labels, and truncated/sorted result previews."
+  },
+  "examples": [
+    {
+      "id": "bird-dev-358",
+      "question_id": 358,
+      "database_id": "card_games",
+      "category": "both_correct",
+      "title": "Same correct answer, different token costs",
+      "explanation": "Both pipelines return black. The compact configuration uses fewer local-generator tokens, but its recorded whole-pipeline token count is slightly higher for this question.",
+      "question": "What is the border color of card \"Ancestor's Chosen\"?",
+      "evidence": "name of card  = 'Ancestor''s Chosen' ;",
+      "available_schema": [
+        {
+          "name": "cards",
+          "columns": [
+            {
+              "name": "borderColor",
+              "type": "TEXT"
+            },
+            {
+              "name": "id",
+              "type": "INTEGER"
+            },
+            {
+              "name": "name",
+              "type": "TEXT"
+            }
+          ]
+        }
+      ],
+      "reference_result": {
+        "status": "ok",
+        "columns": [
+          "borderColor"
+        ],
+        "rows_preview": [
+          [
+            "black"
+          ]
+        ],
+        "row_count": 1,
+        "distinct_row_count": 1,
+        "preview_limit": 10,
+        "truncated": false,
+        "preview_order": "canonical_display_order"
+      },
+      "gold_sql_sha256": "59c7b13bcfc52007612d73593d0bd05f93cae876b0053de7b656fb920b8f6d38",
+      "variants": {
+        "baseline": {
+          "final_pipeline_sql": "SELECT DISTINCT `borderColor` FROM `cards` WHERE `name` = 'Ancestor''s Chosen';",
+          "result": {
+            "status": "ok",
+            "columns": [
+              "borderColor"
+            ],
+            "rows_preview": [
+              [
+                "black"
+              ]
+            ],
+            "row_count": 1,
+            "distinct_row_count": 1,
+            "preview_limit": 10,
+            "truncated": false,
+            "preview_order": "canonical_display_order"
+          },
+          "correct": true,
+          "tokens": {
+            "local_generator": {
+              "prompt_tokens": 1415,
+              "completion_tokens": 281,
+              "total_tokens": 1696
+            },
+            "pipeline": {
+              "prompt_tokens": 53364,
+              "completion_tokens": 2907,
+              "total_tokens": 56271
+            }
+          }
+        },
+        "tuned-compact": {
+          "final_pipeline_sql": "SELECT DISTINCT `borderColor` FROM `cards` WHERE `name` = 'Ancestor''s Chosen';",
+          "result": {
+            "status": "ok",
+            "columns": [
+              "borderColor"
+            ],
+            "rows_preview": [
+              [
+                "black"
+              ]
+            ],
+            "row_count": 1,
+            "distinct_row_count": 1,
+            "preview_limit": 10,
+            "truncated": false,
+            "preview_order": "canonical_display_order"
+          },
+          "correct": true,
+          "tokens": {
+            "local_generator": {
+              "prompt_tokens": 332,
+              "completion_tokens": 26,
+              "total_tokens": 358
+            },
+            "pipeline": {
+              "prompt_tokens": 54053,
+              "completion_tokens": 3170,
+              "total_tokens": 57223
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "bird-dev-507",
+      "question_id": 507,
+      "database_id": "card_games",
+      "category": "regression",
+      "title": "A regression: counting cards instead of sets",
+      "explanation": "The compact configuration's final query joins individual cards and changes the denominator. The reference percentage is about 0.8264%; the compact answer is about 1.0920%.",
+      "question": "For all the set of cards that has Brazil Portuguese translation, what is the percentage of them are only available online?",
+      "evidence": "Brazil Portuguese translation refers to language = 'Portuguese (Brazil)'; only available online refers to isOnlineOnly = 1; percentage of online only Brazil Portuguese in all Brazil Portuguese cards refers to DIVIDE(SUM(isOnlineOnly = 1), SUM(language = 'Portuguese (Brazil)))*100",
+      "available_schema": [
+        {
+          "name": "cards",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER"
+            },
+            {
+              "name": "isOnlineOnly",
+              "type": "INTEGER"
+            },
+            {
+              "name": "setCode",
+              "type": "TEXT"
+            },
+            {
+              "name": "uuid",
+              "type": "TEXT"
+            }
+          ]
+        },
+        {
+          "name": "foreign_data",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER"
+            },
+            {
+              "name": "language",
+              "type": "TEXT"
+            },
+            {
+              "name": "uuid",
+              "type": "TEXT"
+            }
+          ]
+        },
+        {
+          "name": "set_translations",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER"
+            },
+            {
+              "name": "language",
+              "type": "TEXT"
+            },
+            {
+              "name": "setCode",
+              "type": "TEXT"
+            },
+            {
+              "name": "translation",
+              "type": "TEXT"
+            }
+          ]
+        },
+        {
+          "name": "sets",
+          "columns": [
+            {
+              "name": "code",
+              "type": "TEXT"
+            },
+            {
+              "name": "id",
+              "type": "INTEGER"
+            },
+            {
+              "name": "isOnlineOnly",
+              "type": "INTEGER"
+            }
+          ]
+        }
+      ],
+      "reference_result": {
+        "status": "ok",
+        "columns": [
+          "CAST(SUM(CASE WHEN isOnlineOnly = 1 THEN 1 ELSE 0 END) AS REAL) * 100 / COUNT(id)"
+        ],
+        "rows_preview": [
+          [
+            0.8264462809917356
+          ]
+        ],
+        "row_count": 1,
+        "distinct_row_count": 1,
+        "preview_limit": 10,
+        "truncated": false,
+        "preview_order": "canonical_display_order"
+      },
+      "gold_sql_sha256": "39f800f1bba5411024d78175462e699a82118bb57b4eb379b7078089165e83ab",
+      "variants": {
+        "baseline": {
+          "final_pipeline_sql": "SELECT\n    (SUM(s.isOnlineOnly) * 100.0) / COUNT(*) AS percentage\nFROM\n    set_translations st\nJOIN\n    sets s ON st.setCode = s.code\nWHERE\n    st.language = 'Portuguese (Brazil)';",
+          "result": {
+            "status": "ok",
+            "columns": [
+              "percentage"
+            ],
+            "rows_preview": [
+              [
+                0.8264462809917356
+              ]
+            ],
+            "row_count": 1,
+            "distinct_row_count": 1,
+            "preview_limit": 10,
+            "truncated": false,
+            "preview_order": "canonical_display_order"
+          },
+          "correct": true,
+          "tokens": {
+            "local_generator": {
+              "prompt_tokens": 2819,
+              "completion_tokens": 505,
+              "total_tokens": 3324
+            },
+            "pipeline": {
+              "prompt_tokens": 103239,
+              "completion_tokens": 14213,
+              "total_tokens": 117452
+            }
+          }
+        },
+        "tuned-compact": {
+          "final_pipeline_sql": "SELECT (SUM(c.isOnlineOnly) * 100.0) / COUNT(*)\nFROM set_translations t\nJOIN sets s ON t.setCode = s.code\nJOIN cards c ON s.code = c.setCode\nWHERE t.language = 'Portuguese (Brazil)';",
+          "result": {
+            "status": "ok",
+            "columns": [
+              "(SUM(c.isOnlineOnly) * 100.0) / COUNT(*)"
+            ],
+            "rows_preview": [
+              [
+                1.0920310153046726
+              ]
+            ],
+            "row_count": 1,
+            "distinct_row_count": 1,
+            "preview_limit": 10,
+            "truncated": false,
+            "preview_order": "canonical_display_order"
+          },
+          "correct": false,
+          "tokens": {
+            "local_generator": {
+              "prompt_tokens": 1261,
+              "completion_tokens": 82,
+              "total_tokens": 1343
+            },
+            "pipeline": {
+              "prompt_tokens": 101681,
+              "completion_tokens": 13790,
+              "total_tokens": 115471
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "bird-dev-341",
+      "question_id": 341,
+      "database_id": "card_games",
+      "category": "both_incorrect",
+      "title": "Shared failure: extra rows despite a similar preview",
+      "explanation": "Both pipelines select the same SQL and return 72 rows rather than the reference's 67. Matching preview rows do not make the complete result correct.",
+      "question": "What are the borderless cards available without powerful foils?",
+      "evidence": "borderless' refers to borderColor; poweful foils refers to cardKingdomFoilId paired with cardKingdomId AND cardKingdomId is not null",
+      "available_schema": [
+        {
+          "name": "cards",
+          "columns": [
+            {
+              "name": "borderColor",
+              "type": "TEXT"
+            },
+            {
+              "name": "cardKingdomFoilId",
+              "type": "TEXT"
+            },
+            {
+              "name": "cardKingdomId",
+              "type": "TEXT"
+            },
+            {
+              "name": "id",
+              "type": "INTEGER"
+            },
+            {
+              "name": "uuid",
+              "type": "TEXT"
+            }
+          ]
+        },
+        {
+          "name": "foreign_data",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER"
+            },
+            {
+              "name": "uuid",
+              "type": "TEXT"
+            }
+          ]
+        },
+        {
+          "name": "legalities",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER"
+            },
+            {
+              "name": "uuid",
+              "type": "TEXT"
+            }
+          ]
+        },
+        {
+          "name": "rulings",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER"
+            },
+            {
+              "name": "uuid",
+              "type": "TEXT"
+            }
+          ]
+        },
+        {
+          "name": "set_translations",
+          "columns": [
+            {
+              "name": "id",
+              "type": "INTEGER"
+            },
+            {
+              "name": "setCode",
+              "type": "TEXT"
+            }
+          ]
+        },
+        {
+          "name": "sets",
+          "columns": [
+            {
+              "name": "code",
+              "type": "TEXT"
+            },
+            {
+              "name": "id",
+              "type": "INTEGER"
+            }
+          ]
+        }
+      ],
+      "reference_result": {
+        "status": "ok",
+        "columns": [
+          "id"
+        ],
+        "rows_preview": [
+          [
+            23004
+          ],
+          [
+            25350
+          ],
+          [
+            25355
+          ],
+          [
+            25357
+          ],
+          [
+            25359
+          ],
+          [
+            25361
+          ],
+          [
+            33094
+          ],
+          [
+            33095
+          ],
+          [
+            33096
+          ],
+          [
+            33097
+          ]
+        ],
+        "row_count": 67,
+        "distinct_row_count": 67,
+        "preview_limit": 10,
+        "truncated": true,
+        "preview_order": "canonical_display_order"
+      },
+      "gold_sql_sha256": "74899c34ee58d8b793074e1a35ec19880983d3407160da31669e7919d2c7ae97",
+      "variants": {
+        "baseline": {
+          "final_pipeline_sql": "SELECT id FROM cards WHERE borderColor = 'borderless' AND (cardKingdomFoilId IS NULL OR cardKingdomId IS NULL);",
+          "result": {
+            "status": "ok",
+            "columns": [
+              "id"
+            ],
+            "rows_preview": [
+              [
+                23004
+              ],
+              [
+                25350
+              ],
+              [
+                25355
+              ],
+              [
+                25357
+              ],
+              [
+                25359
+              ],
+              [
+                25361
+              ],
+              [
+                33094
+              ],
+              [
+                33095
+              ],
+              [
+                33096
+              ],
+              [
+                33097
+              ]
+            ],
+            "row_count": 72,
+            "distinct_row_count": 72,
+            "preview_limit": 10,
+            "truncated": true,
+            "preview_order": "canonical_display_order"
+          },
+          "correct": false,
+          "tokens": {
+            "local_generator": {
+              "prompt_tokens": 4576,
+              "completion_tokens": 1024,
+              "total_tokens": 5600
+            },
+            "pipeline": {
+              "prompt_tokens": 62306,
+              "completion_tokens": 6887,
+              "total_tokens": 69193
+            }
+          }
+        },
+        "tuned-compact": {
+          "final_pipeline_sql": "SELECT id FROM cards WHERE borderColor = 'borderless' AND (cardKingdomFoilId IS NULL OR cardKingdomId IS NULL);",
+          "result": {
+            "status": "ok",
+            "columns": [
+              "id"
+            ],
+            "rows_preview": [
+              [
+                23004
+              ],
+              [
+                25350
+              ],
+              [
+                25355
+              ],
+              [
+                25357
+              ],
+              [
+                25359
+              ],
+              [
+                25361
+              ],
+              [
+                33094
+              ],
+              [
+                33095
+              ],
+              [
+                33096
+              ],
+              [
+                33097
+              ]
+            ],
+            "row_count": 72,
+            "distinct_row_count": 72,
+            "preview_limit": 10,
+            "truncated": true,
+            "preview_order": "canonical_display_order"
+          },
+          "correct": false,
+          "tokens": {
+            "local_generator": {
+              "prompt_tokens": 1166,
+              "completion_tokens": 60,
+              "total_tokens": 1226
+            },
+            "pipeline": {
+              "prompt_tokens": 58896,
+              "completion_tokens": 5923,
+              "total_tokens": 64819
+            }
+          }
+        }
+      }
+    }
+  ]
+}

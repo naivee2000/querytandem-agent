@@ -59,6 +59,8 @@ and fitted weights are included so the negative result can be inspected.
 
 ## Run or review
 
+- [Website demo handoff](docs/DEMO_HANDOFF.md) and
+  [verified recorded-example data](docs/demo/demo-data.json)
 - [Experiment setup and reproduction](experiments/compact_icl/README.md)
 - [Four-variant results](experiments/compact_icl/results/compact-icl.json)
 - [Routing validation](experiments/compact_icl/results/routing-validation.md)
